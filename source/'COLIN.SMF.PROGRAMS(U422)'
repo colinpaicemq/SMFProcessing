@@ -1,0 +1,77 @@
+//MIT License
+//
+//Copyright (c) 2020 Stromness Software Solutions.
+//
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+//
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+//
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
+//
+//* Contributors:
+//*   Colin Paice - Initial Contribution
+// ===================================================================
+// Example user macros  for formatting of fields
+// ===================================================================
+FILE * UF422CU = 0; // summary
+#define  U422SC u422C(pSMFDate,pSMFTime, \
+ lCID,CSS,SSA,SAP,SAU,NSZ,SPR,\
+  LCT,LFW,LRH,LWM,LTM, \
+  CCT,CFW,CRH,CWM,CTM,IHR,IFW);
+u422C(char * pSMFDate, char * pSMFTime,
+      int CID, int CSS,int SSA,int SAP, int SAU, int NSZ, int SPR,
+      int LCT, int LFW, int LRH, int LWM, char * pPrevTime,
+      int CCT, int CFW, int CRH, int CWM, char * pCurrTime,
+      int IHR, int IFW
+  ){
+  if  (UF422CU   ==(FILE *)  -1) return;
+  if  (UF422CU   == 0 )
+  {
+    UF422CU   = MYOPEN("dd:U422CU  ");
+    if ( UF422CU== 0)
+    {
+      perror("Error opening dd:U422CU");
+      UF422CU = (FILE *) -1 ;
+      return;
+    }
+    fprintf(UF422CU,"%8.8s,%8.8s,%6.6s,%6.6s,%7.7s,%4.4s,%6.6s,"
+            "%8.8s,%8.8s,%8.8s,%5.5s,%7.7s,"
+            "%8.8s,%8.8s,%8.8s,%5.5s,%7.7s,"
+            "\n",
+            "Date","Time","Sysid","CapMB","NVCapMB","Hit%","FWB/M",
+            "Cur Time","IOCount","FWBypass","RHit%","FWB/Min",
+            "PrevTime","IOCount","FWBypass","RHit%","FWB/Min");
+  }
+    fprintf(UF422CU,"%8.8s,%8.8s,%6.6i,%6i,%7i,%4i,%6i,"
+            "%8.8s,%8i,%8i,%5i,%7i,"
+            "%8.8s,%8i,%8i,%5i,%7i,"
+            "\n",
+            pSMFDate,pSMFTime,CID,CSS/(1024*1024),NSZ/(1024*1024),
+            IHR,IFW,  // Average Hit ratio average fast Write Bypass/min
+            pCurrTime,CCT,CFW,CRH,CWM,
+            pPrevTime,LCT,LFW,LRH,LWM );
+if ( CSS!= SSA )
+  fprintf(stderr,"SMF 42.2 CU %6.6x Size of storage %i MB != Available"
+            "%i\n", CID,CSS/(1024*1024),SSA/(1024*1024));
+if ( SAP > 0   )
+  fprintf(stderr,"SMF 42.2 CU %6.6x Pinned Storage %i > \n",
+              CID,SAP);
+if ( SAU > 0   )
+  fprintf(stderr,"SMF 42.2 CU %6.6x Storage unavailable %i > \n",
+              CID,SAU);
+if ( SPR > 0   )
+  fprintf(stderr,"SMF 42.2 CU %6.6x NV Storage unavailable %i > \n",
+              CID,SPR);
+}

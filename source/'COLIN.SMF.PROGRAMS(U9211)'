@@ -1,0 +1,66 @@
+//MIT License
+//
+//Copyright (c) 2020 Stromness Software Solutions.
+//
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+//
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+//
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
+//
+//* Contributors:
+//*   Colin Paice - Initial Contribution
+// ===================================================================
+// Example user macros  for formatting of fields
+// ===================================================================
+FILE * UF92_11 = 0; // summary
+#define  U92_11 u92_11(JobName,SMF92CTOdt,SMF92CTCdt,\
+ duration,SMF92CTY, SMF92CFG, SMF92CTK,SMF92CIN,SMF92CSR,SMF92CSW, \
+  SMF92CDI,SMF92CIR,SMF92CIW, SMF92CBR, SMF92CBW, SMF92CPN);
+ void u92_11(char JobName[9],char * pOpen, char * pClose,
+      float duration,int CTY, int CFG, char * CTK, int    CIN,
+      int CSR, int CSW, int CDI, int CIR, int CIW,
+      int long long  CBR, int long long CBW,  char * CPN
+  ){
+  if  (UF92_11   ==(FILE *)  -1) return;
+  if  (UF92_11   == 0 )
+  {
+    UF92_11   = MYOPEN("dd:U9211   ");
+    if ( UF92_11== 0)
+    {
+      perror("Error opening dd:U9111");
+      UF92_11 = (FILE *) -1 ;
+      return;
+    }
+    fprintf(UF92_11,"%8.8s,%-8.8s,"
+            "%-15.15s,%8.8s,%6.6s,%6.6s,%6.6s,%-8.8s,"
+            "%6.6s,%6.6s,%-8.8s,%4.4s"
+            "\n",
+            "JobName","iNode",
+            "OpenTime","Duration","Dir","R cnt","R Blks","R Bytes",
+            "W cnt","W Blks","W Byte","Path");
+  }
+    fprintf(UF92_11,"%8.8s,%8.8x,%-15.15s,%8.3f,"
+           "%6.1i,%6.1i,%6.1i,%8.1lli,"
+            "%6.1i,%6.1i,%8.1lli,"
+            "%s"
+            "\n",
+            JobName,
+            CIN,
+            pOpen+11,duration,
+            CDI,CSR,CIR,CBR,
+            CSW,CIW,CBW,
+            CPN);
+}

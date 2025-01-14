@@ -1,0 +1,139 @@
+//MIT License
+//
+//Copyright (c) 2020 Stromness Software Solutions.
+//
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+//
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+//
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
+//
+//* Contributors:
+//*   Colin Paice - Initial Contribution
+
+//  ZFS file closed - stats
+
+//
+#include <U925.h> //  the functions for common printing of vtocs
+#include <U9211.h> //  the functions for common printing of vtocs
+FILE * SMF92_11  =0;  // for reserved
+//
+// start processing here
+//
+void * RootS9211   =  NULL;
+void dosmf92_11( char  * pSMF,long count){
+// #include <U925i.h> //  the functions for common printing of vtocs
+  if  (SMF92_11 == 0 ) SMF92_11 = MYOPEN("dd:S9211   ");
+  if  (SMF92_11 == (FILE *)   -1)return;
+  struct flagTable Flag0[] =
+  {
+    {0x80, 0x80,"VNode interface    " },
+    {0x40, 0x40,"Network socket     " },
+    {0x20, 0x20,"File was cached    " },
+    {0x10, 0x10,"Deny read          " },
+    {0x80, 0x80,"Deny Write         " },
+  };
+  // the printf* routines use this global variable
+  fHandle = SMF92_11;
+  doneIDTHeader = 0;
+  int offset;
+  printOffset = 0;
+  char * pSMFZ;
+  char * pOffsetBase;   // this is used to caluclate field offsets
+  pOffsetBase = pSMF;
+  pSMFZ = pSMF;
+  char * system;
+  float fDuration;
+  char startDT[27];
+  char endDT[27];
+  char * p = pSMF;  // this is incremented with each field
+  //
+  // start of fields
+  //
+  xi(LEN         ,2 ,%    ,"Record length     ",NOPRINT);
+  xi(SEG         ,2 ,%    ,"Segment type      ",NOPRINT);
+  xx(FLG         ,1 ,%    ,"Record Flag       ",NOPRINT);
+  xx(REC_TYPE    ,1 ,%    ,"Record type       ",NOPRINT);
+  xfn(TME        ,4 ,SMFTime ,"SMFTime        ",NOPRINT);
+  xfn(DTE        ,4 ,SMFDate ,"SMFDate        ",NOPRINT);
+  xs(SID         ,4 ,%    ,"SMF system id     ",NOPRINT);
+  xs(SSID        ,4 ,%    ,"SMF subsystem_id  ",NOPRINT);
+  xi(SUBTYPE     ,2 ,%    ,"SMFSubtype        ",NOPRINT);
+  xx(RESERVER24  ,2 ,%    ,"Reserved          ",NOPRINT);
+  xi(SMF92SDL    ,2 ,%    ,"Length Self def   ",NOPRINT);
+  xi(SMF92SOF    ,4 ,%    ,"offset to subsys  ",NOPRINT);
+  xi(SMF92SLN    ,2 ,%    ,"Length    susbsy  ",NOPRINT);
+  xi(SMF92SON    ,2 ,%    ,"Number    subsys  ",NOPRINT);
+  xi(SMF92IOF    ,4 ,%    ,"offset to id      ",NOPRINT);
+  xi(SMF92ILN    ,2 ,%    ,"Length    id      ",NOPRINT);
+  xi(SMF92ION    ,2 ,%    ,"Number    id      ",NOPRINT);
+  xi(SMF92DOF    ,4 ,%    ,"offset to data    ",NOPRINT);
+  xi(SMF92DLN    ,2 ,%    ,"Length    Data    ",NOPRINT);
+  xi(SMF92DON    ,2 ,%    ,"Number    data    ",NOPRINT);
+ char JobName[9];
+ TRIPLET(ID         ,pSMFZ+ SMF92IOF    ,
+        SMF92ION  ,SMF92ILN ,NOPRINT);
+    xs(SMF92JBN    ,8,%,"JobName          ",  PRINT);
+    memcpy(&JobName[0],&SMF92JBN[0],8);
+    JobName[8] = 0; // null terminator
+ ETRIPLET(ID);
+ TRIPLET(SMF9211    ,pSMFZ+ SMF92DOF    ,
+        SMF92DON  , SMF92DLN ,NOPRINT);
+ // fprintf(fHandle,"JobName:%8.8s\n",JobName);
+    xSTCKDT(SMF92CTO    ,8,%,"Open time        ",  PRINT);
+    xSTCKDT(SMF92CTC    ,8,%,"Close time       ",  PRINT);
+     unsigned long long lduration =  SMF92CTCll  - SMF92CTOll;
+     float duration =  ((float) lduration )/1000000;
+     printfloat("duration",duration,"%","Duration in secs");
+    xi(SMF92CTY        ,1  ,%     ,"Type BPXYFTYP     ",  PRINT);
+    xflag(SMF92CFG ,1 ,Flag0   ,"Flag               ",  PRINT);
+    int xx = SMF92CFG;
+    if(SMF92CFG != 0)
+    fprintf(fHandle,"CFG %8.8x\n",xx);
+ // xi(SMF92CFG        ,1  ,%     ,"Record type       ",  PRINT);
+    xs(Reserved18      ,2  ,%     ,"Reserved          ",NOPRINT);
+    xx(SMF92CTK         ,4  ,%     ,"File token       ",  PRINT);
+    xi(SMF92CIN         ,4  ,%8.8x ,"File iNode       ",  PRINT);
+    xi(SMF92CDN         ,4  ,%     ,"?                ",NOPRINT);
+    xi(SMF92CSR         ,4  ,%     ,"Reads reqs       ",  PRINT);
+    xi(SMF92CSW         ,4  ,%     ,"Writes reqs      ",  PRINT);
+    xi(SMF92CDI         ,4  ,%     ,"Directory blocks ",  PRINT);
+    xi(SMF92CIR         ,4  ,%     ,"IO blocks read   ",  PRINT);
+    xi(SMF92CIW         ,4  ,%     ,"IO blocks write  ",  PRINT);
+    xi(SMF92CBR         ,8  ,%     ,"Bytes reads      ",  PRINT);
+    xi(SMF92CBW         ,8  ,%     ,"Bytes Written    ",  PRINT);
+    checkOffset(68);
+    xs(SMF92CPN         ,64 ,%     ,"Path name        ",  PRINT);
+     // dont print the following time because they are inaccurate
+     // because they are in 128 microsecond units
+     // use the ones later
+     // print out the user data
+       fprintf(fHandle,"\n");
+      U92_11
+     addTree9211(JobName,
+                 SMF92CIN,
+                 duration,
+                 SMF92CDI,
+                 SMF92CSR,
+                 SMF92CIR,
+                 SMF92CBR,
+                 SMF92CSW,
+                 SMF92CIW,
+                 SMF92CBW,
+                 SMF92CPN,
+                 &RootS9211);
+ ETRIPLET(SMF92111 );
+
+}

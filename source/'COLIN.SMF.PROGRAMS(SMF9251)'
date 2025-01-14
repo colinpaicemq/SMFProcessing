@@ -1,0 +1,112 @@
+//MIT License
+//
+//Copyright (c) 2020 Stromness Software Solutions.
+//
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+//
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+//
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
+//
+//* Contributors:
+//*   Colin Paice - Initial Contribution
+
+//  ZFS response time calls
+//
+#include <U925.h> //  the functions for common printing of vtocs
+FILE * SMF92_51  =0;  // for reserved
+//
+// start processing here
+//
+void dosmf92_51( char  * pSMF,long count){
+// #include <U925i.h> //  the functions for common printing of vtocs
+  if  (SMF92_51 == 0 ) SMF92_51 = MYOPEN("dd:S9251   ");
+  if  (SMF92_51 == (FILE *)   -1)return;
+  // the printf* routines use this global variable
+  fHandle = SMF92_51;
+  doneIDTHeader = 0;
+  int offset;
+  printOffset = 0;
+  char * pSMFZ;
+  char * pOffsetBase;   // this is used to caluclate field offsets
+  pOffsetBase = pSMF;
+  pSMFZ = pSMF;
+  char * system;
+  float fDuration;
+  char startDT[27];
+  char endDT[27];
+  char * p = pSMF;  // this is incremented with each field
+  fprintf(fHandle,
+                "The counts "
+                "and response times for vnode operations\n");
+  //
+  // start of fields
+  //
+  xi(LEN         ,2 ,%    ,"Record length     ",NOPRINT);
+  xi(SEG         ,2 ,%    ,"Segment type      ",NOPRINT);
+  xx(FLG         ,1 ,%    ,"Record Flag       ",NOPRINT);
+  xx(REC_TYPE    ,1 ,%    ,"Record type       ",NOPRINT);
+  xfn(TME        ,4 ,SMFTime ,"SMFTime        ",  PRINT);
+  xfn(DTE        ,4 ,SMFDate ,"SMFDate        ",NOPRINT);
+  xs(SID         ,4 ,%    ,"SMF system id     ",NOPRINT);
+  xs(SSID        ,4 ,%    ,"SMF subsystem_id  ",NOPRINT);
+  xi(SUBTYPE     ,2 ,%    ,"SMFSubtype        ",NOPRINT);
+  xx(RESERVER24  ,2 ,%    ,"Reserved          ",NOPRINT);
+  xi(SMF92SDL    ,2 ,%    ,"Lenth self def    ",NOPRINT);
+  xi(SMF92SOF    ,4 ,%    ,"offset to subsys  ",NOPRINT);
+  xi(SMF92SLN    ,2 ,%    ,"Length    susbsy  ",NOPRINT);
+  xi(SMF92SON    ,2 ,%    ,"Number    subsys  ",NOPRINT);
+  xi(SMF92IOF    ,4 ,%    ,"offset to id      ",NOPRINT);
+  xi(SMF92ILN    ,2 ,%    ,"Length    id      ",NOPRINT);
+  xi(SMF92ION    ,2 ,%    ,"Number    id      ",NOPRINT);
+  checkOffset(44);
+  xi(SMF92DOF    ,4 ,%    ,"offset to data    ",NOPRINT);
+  xi(SMF92DLN    ,2 ,%    ,"Length    Data    ",NOPRINT);
+  xi(SMF92DON    ,2 ,%    ,"Number    data    ",NOPRINT);
+  int countCalls;
+  int sizeCalls;
+  char * pCalls;
+   TRIPLET(SMF9251    ,pSMFZ+ SMF92DOF    ,
+          SMF92DON  , SMF92DLN ,NOPRINT);
+    xSTCKEDT(CCT         ,16,%,"recorded time    ",  PRINT);
+    xi(CCN              ,4  ,%     ,"Number of calls   ",NOPRINT);
+    xi(CCL             ,4  ,%     ,"Size of record    ",NOPRINT);
+    countCalls = CCN;
+    sizeCalls = CCL;
+     // dont print the following time because they are inaccurate
+     // because they are in 128 microsecond units
+     // use the ones later
+     pCalls = p;
+    ETRIPLET(COUNTS   );
+  // this follows on from the above
+  fprintf(fHandle,"%-8.8s %-8.8s %-8.8s %-8.8s %-8.8s %-8.8s %s\n",
+          "to_locFS","to_remfs","remtoloc","remtorem","Avg uS L",
+          "avg uS R","Name");
+   TRIPLET(CALLS      ,pCalls             ,
+          countCalls, sizeCalls,NOPRINT);
+  xi(VCC         ,8 ,%    ,"to Local FS       ",NOPRINT);
+  xi(VCX         ,8 ,%    ,"to remote FS      ",NOPRINT);
+  xi(VCR         ,8 ,%    ,"remote-local FS   ",NOPRINT);
+  xi(VCRX        ,8 ,%    ,"remove-remote FS  ",NOPRINT);
+  xi(VCT         ,4 ,%    ,"Avg et for local  ",NOPRINT);
+  xi(VCRT        ,4 ,%    ,"Avg et for remote ",NOPRINT);
+  xs(VCN         ,52,%    ,"name              ",NOPRINT);
+  if (VCC+VCX+VCR+VCRX > 0)
+  fprintf(fHandle,"%8.1lli %8.1lli %8.1lli %8.1lli "
+  "%8.1i %8.1i %-52.52s\n",
+    VCC,VCX,VCR,VCRX,VCT,VCRT,VCN);
+    ETRIPLET(CALLS    );
+
+}

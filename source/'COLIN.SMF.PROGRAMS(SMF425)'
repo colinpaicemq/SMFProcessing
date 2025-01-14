@@ -1,0 +1,182 @@
+//MIT License
+//
+//Copyright (c) 2020 Stromness Software Solutions.
+//
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+//
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+//
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
+//
+//* Contributors:
+//*   Colin Paice - Initial Contribution
+#include <SMF425VF.h> //  the functions for common printing of vtocs
+
+
+#include <U425.h> //  the functions for common printing of vtocs
+FILE * SMF42_5VR= 0;  // for reserved
+FILE * SMF42_5VM= 0;
+FILE * SMF42_5V = 0;
+FILE * SMF42_5  = 0;
+int doneIDTHeader = 0;
+//
+// start processing here
+//
+void dosmf42_5( char  * pSMF,long count){
+// #include <U425i.h> //  the functions for common printing of vtocs
+  if  (SMF42_5VM== 0 ) SMF42_5VM= MYOPEN("dd:S425VM  ");
+  if  (SMF42_5VR== 0 ) SMF42_5VR= MYOPEN("dd:S425VR  ");
+//if  (SMF42_5VM== (FILE *)   -1)return;
+  if  (SMF42_5V == 0 ) SMF42_5V = MYOPEN("dd:S425V   ");
+  if  (SMF42_5V == (FILE *)   -1)return;
+  if  (SMF42_5  == 0 ) SMF42_5  = MYOPEN("dd:S425    ");
+  if  (SMF42_5  == (FILE *)   -1)return;
+  // the printf* routines use this global variable
+  fHandle = SMF42_5 ;
+  doneIDTHeader = 0;
+  int offset;
+  printOffset = 0;
+  char * pSMFZ;
+  char * pOffsetBase;   // this is used to caluclate field offsets
+  pOffsetBase = pSMF;
+  pSMFZ = pSMF;
+  char * system;
+  float fDuration;
+  char startDT[27];
+  char endDT[27];
+  char * p = pSMF;  // this is incremented with each field
+  //
+  // start of fields
+  //
+  xi(LEN         ,2 ,%    ,"Record length     ",NOPRINT);
+  xi(SEG         ,2 ,%    ,"Segment type      ",NOPRINT);
+  xx(FLG         ,1 ,%    ,"Record Flag       ",NOPRINT);
+  xx(REC_TYPE    ,1 ,%    ,"Record type       ",NOPRINT);
+  xfn(TME        ,4 ,SMFTime ,"SMFTime        ",NOPRINT);
+  xfn(DTE        ,4 ,SMFDate ,"SMFDate        ",NOPRINT);
+  xs(SID         ,4 ,%    ,"SMF system id     ",NOPRINT);
+  xs(SSID        ,4 ,%    ,"SMF subsystem_id  ",NOPRINT);
+  xi(SUBTYPE     ,2 ,%    ,"SMFSubtype        ",NOPRINT);
+  xi(NT          ,2 ,%    ,"Number of triplets",NOPRINT);
+  xx(RES1A       ,2 ,%    ,"reserverd         ",NOPRINT);
+  xi(OPS         ,4 ,%    ,"offset to prod    ",NOPRINT);
+  xi(LPS         ,2 ,%    ,"Length    prod    ",NOPRINT);
+  xi(NPS         ,2 ,%    ,"Number    prod    ",NOPRINT);
+  xi(SRO         ,4 ,%    ,"offset to stor cla",NOPRINT);
+  xi(SRL         ,2 ,%    ,"Length  stor class",NOPRINT);
+  xi(SRN         ,2 ,%    ,"Number  storclas  ",NOPRINT);
+  xi(VHO         ,4 ,%    ,"offset to vol hd  ",NOPRINT);
+  xi(VHL         ,2 ,%    ,"Length  vol hd    ",NOPRINT);
+  xi(VHN         ,2 ,%    ,"Number  vol hd    ",NOPRINT);
+  TRIPLET(Prod  t,pSMFZ+ OPS         ,
+        NPS      , LPS      ,NOPRINT);
+     xs(PDL              ,8  ,%     ,"Product level      ",NOPRINT);
+     xs(PDN              ,10 ,%     ,"Product name       ",NOPRINT);
+     xi(PSV              ,1  ,%     ,"subversion         ",NOPRINT);
+     xi(PSVRES           ,1  ,%     ,"Reserved           ",NOPRINT);
+     xSTCKDT(PTS         ,8  ,%     ,"Start time         ",NOPRINT);
+     xSTCKDT(PTE         ,8  ,%     ,"End   time         ",NOPRINT);
+     unsigned long long lduration =  PTEll - PTSll;
+     fDuration =  ((float) lduration )/1000000;
+     memcpy(&startDT[0],PTSdt,sizeof(startDT));
+     memcpy(&endDT[0],PTEdt,sizeof(endDT));
+//   printfloat("duration",fDuration,"%","Interval in secs");
+     xx(res36            ,4  ,%     ,"Reserverd          ",NOPRINT);
+ ETRIPLET(Prod     );
+ TRIPLET(StorClass  ,pSMFZ+ SRO         ,
+        SRN       , SRL      ,NOPRINT);
+     xi(SCRNL            ,2  ,%     ,"Len stor class    ",NOPRINT);
+     xs(SCRNN            ,30 ,%     ,"Stor class name   ",  PRINT);
+     // dont print the following time because they are inaccurate
+     // because they are in 128 microsecond units
+     // use the ones later
+     xj(SCIOR            ,4  ,%     ,"Response time     ",NOPRINT);
+     xj(SCIOC            ,4  ,%     ,"Connect time      ",NOPRINT);
+     xj(SCIOP            ,4  ,%     ,"Pending time      ",NOPRINT);
+     xj(SCIOD            ,4  ,%     ,"Disc    time      ",NOPRINT);
+     xj(SCIOQ            ,4  ,%     ,"CU queue time     ",NOPRINT);
+     xi(SCION            ,4  ,%     ,"# IOs             ",  PRINT);
+     // 3990
+     xi(SCCND             ,4  ,%     ,"# tot cache cand  ",NOPRINT);
+     xi(SCHIT             ,4  ,%     ,"# tot cache hit   ",NOPRINT);
+     xi(SCWCN             ,4  ,%     ,"# Write cand      ",NOPRINT);
+     xi(SCWHI             ,4  ,%     ,"# write hits      ",NOPRINT);
+     xi(SCSEQ             ,4  ,%     ,"# seq IOs         ",NOPRINT);
+     xi(SCRLC             ,4  ,%     ,"# rec level       ",NOPRINT);
+     xi(SCICL             ,4  ,%     ,"# inhibit cache   ",NOPRINT);
+     xj(SCDAO             ,4  ,%     ,"DAO time          ",NOPRINT);
+     xj(SCRDD             ,4  ,%     ,"avg read disc     ",NOPRINT);
+     xi(SCRDT             ,4  ,%     ,"# read ops        ",  PRINT);
+     printCache(
+                 SCION,   //  Number of IOs
+                 SCCND ,   //  Number Cache Cand
+                 SCRDT ,   //  Number Read ops
+                 SCHIT ,   //  Number Cache hits
+                 SCWCN ,   //  Number Write candi
+                 SCWHI ,   //  Number Write Hits
+                 SCSEQ,    //  Number SEQ
+                 SCRLC ,   //  Number Rec lvl Cac
+                 SCICL     //  Number Inh lvl Cac
+                );
+     xi(SCHRD            ,4  ,%nz   ,"# zHPF read       ",  PRINT);
+     xi(SCHWR            ,4  ,%nz   ,"# zHPF write      ",  PRINT);
+     xi(SCR1U            ,4  ,%     ,"Response time     ",NOPRINT);
+     xi(SCC1U            ,4  ,%     ,"avg conn time     ",NOPRINT);
+     xi(SCP1U            ,4  ,%     ,"avg pend time     ",NOPRINT);
+     xi(SCD1U            ,4  ,%     ,"avg disc time     ",NOPRINT);
+     xi(SCQ1U            ,4  ,%     ,"avg CU q time     ",NOPRINT);
+     xi(SCA1U            ,4  ,%     ,"avg DAO  time     ",NOPRINT);
+     xi(SCT1U            ,4  ,%     ,"avg read disc time",  PRINT);
+     xi(SCB1U            ,4  ,%     ,"avg busy time     ",NOPRINT);
+     xi(SCM1U            ,4  ,%     ,"avg IC time       ",NOPRINT);
+     printAvgRT(    SCR1U,     SCC1U,    SCP1U,SCD1U,
+    SCQ1U,    SCA1U,    SCT1U,    SCB1U,    SCM1U);
+     xi(SCSNO            ,4  ,%     ,"offset sync       ",NOPRINT);
+     xi(SCSNL            ,2  ,%     ,"len sync          ",NOPRINT);
+     xi(SCSNN            ,2  ,%     ,"num sync reseved  ",NOPRINT);
+     xi(SCRRU            ,2  ,%     ,"avg rand read rt  ",  PRINT);
+     xi(SCRSU            ,2  ,%     ,"avg rand read st  ",  PRINT);
+     U425C
+     U425T
+  if (SCSNO  > 0 &&SCSNL  > 0)
+  {
+  TRIPLET(SYNCIO     ,pSMFZ+SCSNO     ,
+        1         , SCSNL ,   NOPRINT);
+     fprintf( fHandle,"====DS Sync ====\n");
+     xi(SNERD            ,4  ,%nz   ,"Syn r req eli ^ att ",  PRINT);
+     xi(SNERH            ,4  ,%nz   ,"Syn r hit eli ^ att ",  PRINT);
+     xi(SNEWR            ,4  ,%nz   ,"Syn w req eli ^ att ",  PRINT);
+     xi(SNRDT            ,4  ,%nz   ,"Syn IO read attempt ",  PRINT);
+     xi(SNROS            ,4  ,%nz   ,"Syn IO read success ",  PRINT);
+     xi(SNWDT            ,4  ,%nz   ,"Syn IO writeattempt ",  PRINT);
+     xi(SNWOS            ,4  ,%nz   ,"Syn IO writesuccess ",  PRINT);
+     xi(SNSEQ            ,4  ,%nz   ,"Syn IO seq ops      ",  PRINT);
+     xi(SNCND            ,4  ,%nz   ,"Syn IO cache cand   ",  PRINT);
+     xi(SNHTS            ,4  ,%nz   ,"Syn IO cache hits   ",  PRINT);
+     xi(SNWCN            ,4  ,%nz   ,"Syn IO write cand   ",  PRINT);
+     xi(SNWHI            ,4  ,%nz   ,"Syn IO write hits   ",  PRINT);
+     xi(SNRMS            ,4  ,%nz   ,"Syn IO read miss    ",  PRINT);
+     xi(SNWMS            ,4  ,%nz   ,"Syn IO wriete miss  ",  PRINT);
+     xi(SNMXR            ,4  ,%nz   ,"Max resp time c read",  PRINT);
+     xi(SNMXW            ,4  ,%nz   ,"Max resp time c writ",  PRINT);
+     xi(SNRDU            ,4  ,%nz   ,"Avg resp time c read",  PRINT);
+     xi(SNWTU            ,4  ,%nz   ,"Avg resp time c writ",  PRINT);
+     xi(SNONC            ,4  ,%nz   ,"Conc IO ops         ",  PRINT);
+     xx(SNReserved76     ,4  ,%nz   ,"Reserved            ",NOPRINT);
+ ETRIPLET(SYNCIO   );
+ }  // if sync IO present
+ ETRIPLET(StorClass);
+#include <smf425v.h>
+}

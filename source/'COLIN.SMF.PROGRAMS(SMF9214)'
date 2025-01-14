@@ -1,0 +1,127 @@
+//MIT License
+//
+//Copyright (c) 2020 Stromness Software Solutions.
+//
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+//
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+//
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
+//
+//* Contributors:
+//*   Colin Paice - Initial Contribution
+
+// ZFS File System Delete  Data Section
+
+#include <U925.h> //  the functions for common printing of vtocs
+FILE * SMF92_14  =0;  // for reserved
+//
+// start processing here
+//
+// process the flag byte
+#ifdef no
+int  SMF9214Del(char *  in, char * buffer)
+   {
+     switch(in[0])
+     {
+     case 0: strcpy(buffer,"Delete");   break;
+     default:
+          strcpy(buffer,"Rename");   break;
+    }
+    return strlen(buffer);
+   }
+#endif
+void dosmf92_14( char  * pSMF,long count){
+struct flagTable Flag0[] =
+ {
+   {0x80, 0x80,"Rename             " },
+   {0x80, 0x00,"Delete             " },
+ };
+// #include <U925i.h> //  the functions for common printing of vtocs
+  if  (SMF92_14 == 0 ) SMF92_14 = MYOPEN("dd:S9214   ");
+  if  (SMF92_14 == (FILE *)   -1)return;
+  // the printf* routines use this global variable
+  fHandle = SMF92_14;
+  doneIDTHeader = 0;
+  int offset;
+  printOffset = 0;
+  char * pSMFZ;
+  char * pOffsetBase;   // this is used to caluclate field offsets
+  pOffsetBase = pSMF;
+  pSMFZ = pSMF;
+  char * system;
+  float fDuration;
+  char startDT[27];
+  char endDT[27];
+  char * p = pSMF;  // this is incremented with each field
+  //
+  // start of fields
+  //
+  xi(LEN         ,2 ,%    ,"Record length     ",NOPRINT);
+  xi(SEG         ,2 ,%    ,"Segment type      ",NOPRINT);
+  xx(FLG         ,1 ,%    ,"Record Flag       ",NOPRINT);
+  xx(REC_TYPE    ,1 ,%    ,"Record type       ",NOPRINT);
+  xfn(TME        ,4 ,SMFTime ,"SMFTime        ",NOPRINT);
+  xfn(DTE        ,4 ,SMFDate ,"SMFDate        ",NOPRINT);
+  xs(SID         ,4 ,%    ,"SMF system id     ",NOPRINT);
+  xs(SSID        ,4 ,%    ,"SMF subsystem_id  ",NOPRINT);
+  xi(SUBTYPE     ,2 ,%    ,"SMFSubtype        ",NOPRINT);
+  xx(RESERVER24  ,2 ,%    ,"Reserved          ",NOPRINT);
+  xi(SMF92SDL    ,2 ,%    ,"Lenth self def    ",NOPRINT);
+  xi(SMF92SOF    ,4 ,%    ,"offset to subsys  ",NOPRINT);
+  xi(SMF92SLN    ,2 ,%    ,"Length    susbsy  ",NOPRINT);
+  xi(SMF92SON    ,2 ,%    ,"Number    subsys  ",NOPRINT);
+  xi(SMF92IOF    ,4 ,%    ,"offset to id      ",NOPRINT);
+  xi(SMF92ILN    ,2 ,%    ,"Length    id      ",NOPRINT);
+  xi(SMF92ION    ,2 ,%    ,"Number    id      ",NOPRINT);
+  checkOffset(44);
+  xi(SMF92DOF    ,4 ,%    ,"offset to data    ",NOPRINT);
+  xi(SMF92DLN    ,2 ,%    ,"Length    Data    ",NOPRINT);
+  xi(SMF92DON    ,2 ,%    ,"Number    data    ",NOPRINT);
+  char JobName[9];
+  TRIPLET(ID         ,pSMFZ+ SMF92IOF    ,
+         SMF92ION  ,SMF92ILN ,NOPRINT);
+     xs(SMF92JBN    ,8,%,"JobName          ",  PRINT);
+     memcpy(&JobName[0],&SMF92JBN[0],8);
+     JobName[8] = 0; // null terminator
+  ETRIPLET(ID);
+ TRIPLET(SMF9214    ,pSMFZ+ SMF92DOF    ,
+        SMF92DON  , SMF92DLN ,NOPRINT);
+    xSTCKDT(DFT        ,8  ,%     ,"Action time      ",  PRINT);
+    xx(DTY             ,1  ,%     ,"File type         ",  PRINT);
+    char delete;
+    delete = * p;
+    xflag(DGLG     ,1 ,Flag0   ,"Flag               ",  PRINT);
+    xx(reserved10      ,2  ,%     ,"reserved          ",NOPRINT);
+    xi(DIN             ,4  ,%     ,"File serial       ",  PRINT);
+    xi(DINP            ,4  ,%     ,"File serial-parent",  PRINT);
+    xx(DDN             ,4  ,%     ,"Device number     ",  PRINT);
+    xs(DFS             ,44 ,%     ,"File system  name ",  PRINT);
+    xi(DNL             ,4  ,%     ,"Length of name    ",NOPRINT);
+    xs(DFN             ,64 ,%     ,"Old file name     ",  PRINT);
+    if (delete == 0x80)          // rename
+    {
+      xi(DNLR            ,4  ,%     ,"Length of name    ",NOPRINT);
+      checkOffset(140);
+      xs(DFNR            ,64 ,%     ,"new file name     ",  PRINT);
+    }
+    // blank line after each section
+    fprintf(fHandle,"\n");
+     // dont print the following time because they are inaccurate
+     // because they are in 128 microsecond units
+     // use the ones later
+ ETRIPLET(SMF9214  );
+
+}

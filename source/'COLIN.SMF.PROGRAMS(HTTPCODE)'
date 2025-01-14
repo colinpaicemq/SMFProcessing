@@ -1,0 +1,99 @@
+//MIT License
+//
+//Copyright (c) 2020 Stromness Software Solutions.
+//
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+//
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+//
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
+//
+//* Contributors:
+//*   Colin Paice - Initial Contribution
+#define http(i,text) \
+case i: l = sprintf(buffer,"%hu " #text "\0",i); break;
+int HTTPCode(char  *  in, char * buffer)
+{
+  int l = 0;
+  short i = * (short *) in;
+  switch(  i )
+  {
+        http(100,Continue)
+        http(101,Switching Protocols)
+        http(102,Processing)
+        http(103,Early Hints)
+        http(200,OK)
+        http(201,Created)
+        http(202,Accepted)
+        http(203,Non-Authoritative Information)
+        http(204,No Content)
+        http(205,Reset Content)
+        http(206,Partial Content)
+        http(207,Multi-Status)
+        http(208,Already Reported)
+        http(300,Multiple Choices)
+        http(301,Moved Permanently)
+        http(302,Found)
+        http(303,See Other)
+        http(304,Not Modified)
+        http(305,Use Proxy)
+        http(307,Temporary Redirect)
+        http(308,Permanent Redirect)
+        http(400,Bad Request)
+        http(401,Unauthorized)
+        http(402,Payment Required)
+        http(403,Forbidden)
+        http(404,Not Found)
+        http(405,Method Not Allowed)
+        http(406,Not Acceptable)
+        http(407,Proxy Authentication Required)
+        http(408,Request Timeout)
+        http(409,Conflict)
+        http(410,Gone)
+        http(411,Length Required)
+        http(412,Precondition Failed)
+        http(413,Payload Too Large)
+        http(414,URI Too Long)
+        http(415,Unsupported Media Type)
+        http(416,Range Not Satisfiable)
+        http(417,Expectation Failed)
+        http(421,Misdirected Request)
+        http(422,Unprocessable Entity)
+        http(423,Locked)
+        http(424,Failed Dependency)
+        http(425,Too Early)
+        http(426,Upgrade Required)
+        http(427,Unassigned)
+        http(428,Precondition Required)
+        http(429,Too Many Requests)
+        http(430,Unassigned)
+        http(431,Request Header Fields Too Large)
+        http(500,Internal Server Error)
+        http(501,Not Implemented)
+        http(502,Bad Gateway)
+        http(503,Service Unavailable)
+        http(504,Gateway Timeout)
+        http(505,HTTP Version Not Supported)
+        http(506,Variant Also Negotiates)
+        http(507,Insufficient Storage)
+        http(508,Loop Detected)
+        http(509,Unassigned)
+        http(510,Not Extended)
+        http(511,Network Authentication Required)
+        default:
+        l=sprintf(buffer,"%hu Unknown code\0",i ); break;
+    }
+  return l;
+}

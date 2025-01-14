@@ -1,0 +1,17 @@
+int  ATSTatus    (char *  in, char * buffer)
+{
+  printf("In ATStatus\n");
+  // input is the char of status
+  // and the buffer
+  char * type[]=     {"Not used",
+                     "Connection is not secure",
+                     "Connection handshake in progress",
+                     "Connection is secure"
+                     };
+  int len;
+  if (in < size[type]
+     len=sprintf(buffer,"%s\0",type[in]);
+  else
+     len=sprintf(buffer,"Unknown input %c\0",in);
+  return len;
+}

@@ -1,0 +1,137 @@
+//MIT License
+//
+//Copyright (c) 2020 Stromness Software Solutions.
+//
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+//
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+//
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
+//
+//* Contributors:
+//*   Colin Paice - Initial Contribution
+// ===================================================================
+// Example user macros  for formatting of fields
+// ===================================================================
+FILE * UF92_59 = 0; // summary
+FILE * UF92_59P= 0; // Pages
+FILE * UF92_59C= 0; // Cache
+#define  U92_59 u92_59(SMF92FSNM,SMF92FSAR,SMF92FSRR,SMF92FSAW, \
+ SMF92FSWR,\
+ SMF92FSDR,SMF92FSDRB,SMF92FSDW,SMF92FSDWB,SMF92FSDWC,SMF92FSDWT, \
+ SMF92FSUS, SMF92FSMT,  \
+  (char *) &SMF92FSTdt);
+ void u92_59(char FSNM[45],  int8 SAR,int8 SRR,int8 SAW,int8 SWR,
+      int8 DR,int8 DRB,int8 DW,int8 DWB,int8 DWC,int8 DWT
+      ,int8 FSUS, int8 FSMT
+      ,char  * FSTdt
+  ){
+  if  (UF92_59   ==(FILE *)  -1) return;
+  if  (UF92_59P  ==(FILE *)  -1) return;
+  if  (UF92_59C  ==(FILE *)  -1) return;
+  if  (UF92_59   == 0 )
+  {
+    UF92_59   = MYOPEN("dd:U9259   ");
+    if ( UF92_59== 0)
+    {
+      perror("Error opening dd:U9259");
+      UF92_59 = (FILE *) -1 ;
+      return;
+    }
+    fprintf(UF92_59,
+                    "Type   AppReq AppRequS     =time  "
+       "    Ios    Bytes "
+        "FileSystem\n");
+  }
+  if  (UF92_59P  == 0 )
+  {
+    UF92_59P  = MYOPEN("dd:U9259P  ");
+    if ( UF92_59P== 0)
+    {
+      perror("Error opening dd:U9259P" );
+      UF92_59P = (FILE *) -1 ;
+      return;
+    }
+    fprintf(UF92_59P," Date       Time             "
+                     "  AppReads    ReaduS =ReadS  "
+                     "AppWrite   WriteuS =WriteS "
+                     "=TotS"
+                     " FileSystem\n");
+  }
+  if  (UF92_59C  == 0 )
+  {
+    UF92_59C  = MYOPEN("dd:U9259CA ");
+    if ( UF92_59C== 0)
+    {
+      perror("Error opening dd:U9259CA");
+      UF92_59C = (FILE *) -1 ;
+      return;
+    }
+    fprintf(UF92_59C," Date       Time            "
+                     "UserCache MetaCache "
+                     "FileSystem\n");
+  }
+  // print out pages in use
+  if (   SAR+SRR+ SAW+SWR > 0)
+  {
+  double rt,wt,tt;  // accumuated time
+  rt = (double) SAR *(double)SRR  /1000000;
+  wt = (double) SAW *(double)SWR  /1000000;
+  tt = rt + wt;
+    fprintf(UF92_59P,"%27.27s "
+                     "%11.1lli %9.1lli %6.3f "
+                     "%9.1lli %9.1lli %6.3f %6.3f "
+                     "%-45.45s"
+            "\n",
+            FSTdt,
+            SAR,SRR,rt,
+            SAW,SWR,wt,
+            tt,
+            FSNM);
+  }
+  // print out pages in use
+    fprintf(UF92_59C,"%27.27s %9.1lli %9.1lli "
+                     "%-45.45s"
+            "\n",
+            FSTdt,
+            FSUS,FSMT,
+            FSNM);
+  //
+  double t;
+  t = (double) SAR*( double)SRR/1000000;
+    fprintf(UF92_59,"Read  %8.1lli %8.1lli %8.3f "
+    "%8.1lli %8.1lli %-45.45s"
+            "\n",
+            SAR,SRR,
+            t,
+            DR,DRB,
+            FSNM);
+  t = (double) SAW*( double)SWR/1000000;
+    fprintf(UF92_59,"Write %8.1lli %8.1lli %8.3f "
+    "%8.1lli %8.1lli %-45.45s"
+            "\n",
+            SAW,SWR,
+            t,
+            DW,DWB,
+            FSNM);
+  t = (double) DWC*( double)DWT/1000000;
+    if( DWC > 0)
+    fprintf(UF92_59,"Wait: %8.1lli %8.1lli %8.3f "
+            "%8.8s          %-45.45s"
+            "\n",
+            DWC,DWT,t,
+            " ",
+            FSNM);
+}

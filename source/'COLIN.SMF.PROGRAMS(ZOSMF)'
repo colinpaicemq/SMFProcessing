@@ -1,0 +1,11 @@
+//IBMJAVA  JOB  1
+// SET C='/tmp/'
+// SET N='zosmf'
+// SET V='listAllCaches'
+// SET V='restoreFromSnapshot'
+// SET V='snapshotCache'
+// SET V='printStats=Classpath+Url'
+//S1       EXEC PGM=BPXBATCH,REGION=0M,
+// PARM='SH java -Xshareclasses:cacheDir=&C,name=&N,&V'
+//STDERR   DD   SYSOUT=*
+//STDOUT   DD   SYSOUT=*

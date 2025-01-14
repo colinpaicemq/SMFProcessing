@@ -1,0 +1,207 @@
+//MIT License
+//
+//Copyright (c) 2020 Stromness Software Solutions.
+//
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+//
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+//
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
+//
+//* Contributors:
+//*   Colin Paice - Initial Contribution
+#include <search.h>
+//
+#define GB (1024 * 1024 *1024)
+#define MB (1024 * 1024      )
+#define KB (1024             )
+void fprintLL(FILE * output,unsigned long long int v)
+{
+  if ( v > 10 * GB     )
+     fprintf(output,"%6.1lliTB,",// jobname idnode dur
+         v /GB);
+  else
+     if (v > 10 * MB )
+        fprintf(output,"%6.1lliMB,",// jobname idnode dur
+         v /MB);
+  else
+     if ( v  > 10 * KB  )
+          fprintf(output,"%6.1lliKB,",// jobname idnode dur
+         v /KB);
+  else
+    fprintf(output,"%6.1lli  ,",// jobname idnode dur
+         v    );
+}
+void fprintL (FILE * output,unsigned long int v)
+{
+  if ( v > 10 * GB             )
+     fprintf(output,"%6.1iTB,",// jobname idnode dur
+         v /GB);
+  else
+     if (v  > 10 * MB         )
+        fprintf(output,"%6.1iMB,",// jobname idnode dur
+         v /MB);
+  else
+     if ( v > 10 * KB         )
+          fprintf(output,"%6.1iKB,",// jobname idnode dur
+         v /KB);
+  else
+    fprintf(output,"%6.1i  ,",// jobname idnode dur
+         v    );
+}
+//
+// Stucture to hold the data
+//
+typedef struct{
+         unsigned long      dir,rCnt,rBlks;
+         unsigned long long rBytes;
+         unsigned long      wCnt,wBlks;
+         unsigned long long wBytes;
+         float              duration;
+         int  count;
+         int iNode;
+         char JobName[8];
+         char path[64];
+} node9211;
+int   addTree9211(char JobName[8],
+         int iNode,
+         float         duration,
+         unsigned long dir,
+         unsigned long rCnt,
+         unsigned long rBlks,
+         unsigned long long rBytes,
+         unsigned long wCnt,
+         unsigned long wBlks,
+         unsigned long long wBytes,
+         char * path,
+         void **treeRoot)
+{
+  int    msg_compare9211(const void *, const void *);
+  void   print_msg_node9211(const void *, VISIT, int);
+  node9211 * pNode;
+  /* allocate our node - we cant use automatic storage as it may */
+  /* be added to the tree - so can not be deleted                */
+   int mallocSize = sizeof(node9211)   ;
+   pNode = (node9211 *) malloc(mallocSize         );
+   if (pNode == 0)
+   {
+           perror("Malloc for node failed ");
+           return 8;
+   }
+  /* initialise the key */
+  pNode ->  iNode   = iNode;
+  memcpy(pNode ->  JobName, JobName,8);
+  void * p    ;
+  node9211 * q    ;
+  p     = (void * ) pNode;
+  /* add it to the tree - it returns node in the tree   */
+  void * pt =*treeRoot;
+  q     = *(node9211 **) tsearch( p , (void **)&pt ,msg_compare9211);
+  * treeRoot = pt;
+  if (q == p ){ /* it didnt exist before - thus it was added */
+      q-> count = 1;
+      q-> duration = duration     ;
+      q-> dir      = dir          ;
+      q-> rCnt     = rCnt         ;
+      q-> rBlks    = rBlks        ;
+      q-> rBytes   = rBytes       ;
+      q-> wCnt     = wCnt         ;
+      q-> wBlks    = wBlks        ;
+      q-> wBytes   = wBytes       ;
+      memcpy(&q->path,path,64);
+        }
+  else /* it did exist before so we need to check and update  */
+  {
+      q-> count    += 1;
+      q-> duration += duration     ;
+      q-> dir      += dir          ;
+      q-> rCnt     += rCnt         ;
+      q-> rBlks    += rBlks        ;
+      q-> rBytes   += rBytes       ;
+      q-> wCnt     += wCnt         ;
+      q-> wBlks    += wBlks        ;
+      q-> wBytes   += wBytes       ;
+      memcpy(&q->path,path,64);
+      free (pNode); //Give it back
+  }
+  return 0;
+}
+/*
+ *  This routine compares two nodes, based on an
+ *  alphabetical ordering of the string field.
+ */
+int msg_compare9211(const void *node1, const void *node2)
+{ node9211 * p1, * p2;
+  p1 = (  node9211 *) node1;
+  p2 = (  node9211 *) node2;
+  int rc;
+  rc = memcmp(p1->JobName, p2-> JobName,8);
+  if (rc == 0)
+  rc = p1->iNode - p2-> iNode ;
+  return rc;
+ //
+}
+FILE * output9211 ;
+void printLeaf9211(const void *ptr, VISIT order, int level)
+{
+  node9211 *q = *(node9211 **) ptr;
+  if(order == leaf|| order == postorder)
+  {
+  fprintf(output,"%8.8s,%6.1i,%10.3f," // jobname idnode dur
+         "%6.1i,%6.1i,", // count  dir
+          q-> JobName ,
+          q-> iNode,
+          q-> duration,
+          //
+          q-> count ,
+          q-> dir );
+  fprintf( output, "%6.1i,", q-> rCnt );
+  fprintL(output, q-> rBlks);
+  fprintLL(output, q-> rBytes);
+
+  fprintf( output, "%6.1i,", q-> wCnt );
+  fprintL( output, q-> wBlks);
+  fprintLL(output, q-> wBytes);
+
+  fprintf(output, "%s" "\n", q-> path);
+
+   }
+}
+long printTree9211(char * fileName, void * treeRoot,char * heading)
+{
+  __amrc_type save_amrc;
+  #define FOPENOPT "a   "
+  output  = fopen(fileName   ,FOPENOPT);
+  if ( output  == NULL)
+  {
+     save_amrc = *__amrc;
+     fprintf(stderr," error opening %s ",fileName );
+     fprintf(stderr," %s \n", strerror(errno)); /* text of the errno*/
+     return;
+  }
+  // dont print header if no records
+  if ( treeRoot  ==  NULL) return;
+  fprintf(output,"%8.8s,%6.6s,"
+          "%10.10s,%6.6s,%6.6s,%6.6s,%6.6s,%8.8s,"
+          "%6.6s,%6.6s,%8.8s,%4.4s"
+          "\n",
+          "JobName ",
+          "iNode ",
+          "Duration  ","Count ","Dir","R_cnt ","R_Blks","   R_Bytes ",
+          "W_cnt ","W_Blks","  W_Bytes ","Path");
+  twalk(treeRoot , printLeaf9211);
+  fclose(output );
+  return 0;
+}

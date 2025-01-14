@@ -1,0 +1,141 @@
+//MIT License
+//
+//Copyright (c) 2020 Stromness Software Solutions.
+//
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+//
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+//
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
+//
+//* Contributors:
+//*   Colin Paice - Initial Contribution
+
+#include <smf119su.h>
+ FILE * SMF119_2 = 0;
+//
+// start processing here
+//
+void dosmf119_2( char  * pSMF,long count){
+printf("In smf119-2\n");
+if  (SMF119_2 == 0 ) SMF119_2 = MYOPEN("dd:S119F2  ");
+if  (SMF119_2 == (FILE *)  -1)return;
+  fHandle = SMF119_2 ;
+  int offset;
+  printOffset = 0;
+  char * pSMFZ;
+//  fprintf(fHandle,"====SMF42 -6 =============== record %u\n",count);
+  char * pOffsetBase;   // this is used to caluclate field offsets
+  pOffsetBase = pSMF;
+  pSMFZ = pSMF;
+  char * system;
+  float fDuration;
+  char startDT[27];
+  char endDT[27];
+  char * p = pSMF;  // this is incremented with each field
+  fprintf( fHandle,"=============================\n");
+  //
+  // start of fields
+  //
+  xi(LEN         ,2 ,%    ,"Record length     ",NOPRINT);
+  xi(SEG         ,2 ,%    ,"Segment type      ",NOPRINT);
+  xx(FLG         ,1 ,%    ,"Record Flag       ",NOPRINT);
+  xx(rec_type    ,1 ,%    ,"Record type       ",NOPRINT);
+  xfn(TME        ,4 ,SMFTime ,"SMFTime        ",PRINT);
+  xfn(DTE        ,4 ,SMFDate ,"SMFDate        ",PRINT);
+  xs(SID         ,4 ,%    ,"SMF system id     ",PRINT);
+  xs(WID         ,4 ,%    ,"SMF subsystem_id  ",PRINT);
+  xi(subtype     ,2 ,%    ,"SMFSubtype        ",PRINT);
+
+
+   xi(triplets ,2 ,%    ,"triplets          ",  NOPRINT);
+   xi(reserved ,2 ,%    ,"reserved          ",  NOPRINT);
+
+   xi(id_o     ,4 ,%    ,"id     offset     ",  NOPRINT);
+   xi(id_l     ,2 ,%    ,"id     len        ",  NOPRINT);
+   xi(id_n     ,2 ,%    ,"id     number     ",  NOPRINT);
+
+   xi(s1_o     ,4 ,%    ,"conn term  o      ",  NOPRINT);
+   xi(s1_l     ,2 ,%    ,"conn term  l      ",  NOPRINT);
+   xi(s1_n     ,2 ,%    ,"conn term n       ",  NOPRINT);
+
+   xi(s2_o     ,4 ,%    ,"telnet offset     ",  NOPRINT);
+   xi(s2_l     ,2 ,%    ,"telnet len        ",  NOPRINT);
+   xi(s2_n     ,2 ,%    ,"telner number     ",  NOPRINT);
+
+   xi(attls_o  ,4 ,%    ,"attls  offset     ",  NOPRINT);
+   xi(attls_l  ,2 ,%    ,"attls  len        ",  NOPRINT);
+   xi(attls_n  ,2 ,%    ,"attls  number     ",  NOPRINT);
+ TRIPLET(TCPID      ,pSMFZ+ id_o        ,
+        id_n      , id_l     ,  PRINT);
+     xs(IEASYS           ,8  ,%     ,"System Name       ",  PRINT);
+     xs(COUPLE           ,8  ,%     ,"COUPLE            ",  PRINT);
+     xs(SUBCOM           ,8  ,%     ,"Subcomponenet     ",  PRINT);
+     xs(VRM              ,8  ,%     ,"Release level     ",  PRINT);
+     xs(Component        ,8  ,%     ,"Component         ",  PRINT);
+     xs(ASIDName         ,8  ,%     ,"ASID Name         ",  PRINT);
+     xs(Userid           ,8  ,%     ,"Userid            ",  PRINT);
+     xs(Reserved         ,2  ,%     ,"Reserved          ",  NOPRINT);
+     xi(asid1    ,2 ,%    ,"asid1             ",  NOPRINT);
+//   xi(asid2    ,2 ,%    ,"asid2             ",  PRINT);
+     xi(reason   ,1 ,%    ,"Reason            ",  PRINT);
+     xi(recordid ,1 ,%    ,"Recordid          ",  PRINT);
+     xi(reserver2,1 ,%    ,"Reserved2         ",  PRINT);
+ ETRIPLET(TCPIP      );
+ TRIPLET(CONN       ,pSMFZ+ s1_o        ,
+        s1_n      , s1_l     ,  PRINT);
+     printf("In ATTLS\n");
+     xs(CLOSJOBN         ,8  ,%     ,"Closing jobname   ",  PRINT);
+     xi(connid   ,4 ,%    ,"connectionid      ",  PRINT);
+  xfn(ATTLSCS    ,4 ,ATSTatus,"AT-TLS Date  ",PRINT);
+//   xi(ATTLSCS  ,1 ,%    ,"ATTLS Conn st     ",  PRINT);
+     xi(ATTLSPS  ,1 ,%    ,"ATTLS Policy Stat ",  PRINT);
+     xi(ATTLSTERM,1 ,%    ,"ATTLS Term code   ",  PRINT);
+     xi(SMCStatus,1 ,%    ,"SMC Status        ",  PRINT);
+     xi(SMCSubTas,4 ,%    ,"APSubtask         ",  PRINT);
+     xfn(ATTOD      ,4 ,SMFTime ,"AT-TLS time    ",PRINT);
+//   xh(ATTOD    ,4 ,%    ,"time since 00:00  ",  PRINT);
+  xfn(ATTDate    ,4 ,SMFDate,"AT-TLS Date  ",PRINT);
+//   xi(ATTDAte  ,4 ,%    ,"DatePacked        ",  PRINT);
+     xi(TTETime  ,4 ,%    ,"TTETIME           ",  PRINT);
+     xi(TTEDate  ,4 ,%    ,"TTE   Date        ",  PRINT);
+     xx(RemIP    ,16,%    ,"Remote IP addr    ",  PRINT);
+     xx(LocalIP  ,16,%    ,"Local IP          ",  PRINT);
+     xi(RemPort  ,2 ,%    ,"Remote Port       ",  PRINT);
+     xi(LocalPort,2 ,%    ,"Local Port        ",  PRINT);
+     xi(InBytes  ,8 ,%    ,"Inbound Bytes     ",  PRINT);
+     xi(OutBytes ,8 ,%    ,"Outbound Bytes    ",  PRINT);
+     xi(SendWind ,4 ,%    ,"Send Window       ",  PRINT);
+     xi(SMaxSendW,4 ,%    ,"Max send window   ",  PRINT);
+     xi(CongWind ,4 ,%    ,"Cong Window       ",  PRINT);
+     xi(SendSeg  ,4 ,%    ,"Send Segment      ",  PRINT);
+     xi(RoundTrip,4 ,%    ,"Round Trip in ms  ",  PRINT);
+     xi(RoTripVar,4 ,%    ,"Round Trip var ms ",  PRINT);
+     xi(SockStat ,1 ,%    ,"Socket Status     ",  PRINT);
+     xi(SockTos  ,1 ,%    ,"Socket Type Service",  PRINT);
+     xi(SReserved,2 ,%    ,"Deprecated         ",  PRINT);
+     xs(SerProfile,32,%       ,"Service Profile    ",  PRINT);
+     xs(SerProfClo,32,%       ,"Service Prof close ",  PRINT);
+     xi(InbSegcnt ,8,%    ,"Inbound Seg count  ",  PRINT);
+     xi(OutSegcnt ,8,%    ,"Outbbound Seg count",  PRINT);
+    xSTCKDT(STCKConn  ,8,%    ,"Connection STCK    ",  PRINT);
+    xSTCKDT(STCKLast  ,8,%    ,"Connect Last STCK  ",  PRINT);
+     xi(LocSMCLID ,8,%    ,"Local SMF Linkn ID ",  PRINT);
+     xi(REMSMCLID ,8,%    ,"Remote SMF Linkn ID",  PRINT);
+ ETRIPLET(CONN       );
+#ifdef no
+#endif
+// ETRIPLET(Self     );
+}

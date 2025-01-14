@@ -1,0 +1,119 @@
+//MIT License
+//
+//Copyright (c) 2020 Stromness Software Solutions.
+//
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+//
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+//
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
+//
+//* Contributors:
+//*   Colin Paice - Initial Contribution
+
+//  ZFS file closed - stats
+
+//
+// #include <U925.h> //  the functions for common printing of vtocs
+// #include <U9211.h> //  the functions for common printing of vtocs
+FILE * SMF92_55  =0;  // for reserved
+//
+// start processing here
+//
+// d * RootS9211   =  NULL;
+void doSMF92_55( char  * pSMF,long count){
+// #include <U925i.h> //  the functions for common printing of vtocs
+  if  (SMF92_55 == 0 ) SMF92_55 = MYOPEN("dd:S9255   ");
+  if  (SMF92_55 == (FILE *)   -1)return;
+  // the printf* routines use this global variable
+  fHandle = SMF92_55;
+  doneIDTHeader = 0;
+  int offset;
+  printOffset = 0;
+  char * pSMFZ;
+  char * pOffsetBase;   // this is used to caluclate field offsets
+  pOffsetBase = pSMF;
+  pSMFZ = pSMF;
+  char * system;
+  float fDuration;
+  char startDT[27];
+  char endDT[27];
+  char * p = pSMF;  // this is incremented with each field
+  fprintf(fHandle,"general zFS disk IO statistics\n");
+  //
+  // start of fields
+  //
+  xi(LEN         ,2 ,%    ,"Record length     ",NOPRINT);
+  xi(SEG         ,2 ,%    ,"Segment type      ",NOPRINT);
+  xx(FLG         ,1 ,%    ,"Record Flag       ",NOPRINT);
+  xx(REC_TYPE    ,1 ,%    ,"Record type       ",NOPRINT);
+  xfn(TME        ,4 ,SMFTime ,"SMFTime        ",NOPRINT);
+  xfn(DTE        ,4 ,SMFDate ,"SMFDate        ",NOPRINT);
+  xs(SID         ,4 ,%    ,"SMF system id     ",NOPRINT);
+  xs(SSID        ,4 ,%    ,"SMF subsystem_id  ",NOPRINT);
+  xi(SUBTYPE     ,2 ,%    ,"SMFSubtype        ",NOPRINT);
+  xx(RESERVER24  ,2 ,%    ,"Reserved          ",NOPRINT);
+  xi(SMF92SDL    ,2 ,%    ,"Length Self def   ",NOPRINT);
+  xi(SMF92SOF    ,4 ,%    ,"offset to subsys  ",NOPRINT);
+  xi(SMF92SLN    ,2 ,%    ,"Length    susbsy  ",NOPRINT);
+  xi(SMF92SON    ,2 ,%    ,"Number    subsys  ",NOPRINT);
+  xi(SMF92IOF    ,4 ,%    ,"offset to id      ",NOPRINT);
+  xi(SMF92ILN    ,2 ,%    ,"Length    id      ",NOPRINT);
+  xi(SMF92ION    ,2 ,%    ,"Number    id      ",NOPRINT);
+  xi(SMF92DOF    ,4 ,%    ,"offset to data    ",NOPRINT);
+  xi(SMF92DLN    ,2 ,%    ,"Length    Data    ",NOPRINT);
+  xi(SMF92DON    ,2 ,%    ,"Number    data    ",NOPRINT);
+ // char JobName[9];
+ TRIPLET(METACACHE  ,pSMFZ+ SMF92DOF    ,
+        SMF92DON  , SMF92DLN ,NOPRINT);
+    xSTCKEDT(SMF92IOT   ,16,%,"Current time    ",  PRINT);
+    xi(SMF92IORD       ,8  ,%     ,"# reads           ",  PRINT);
+    xi(SMF92IOWR       ,8  ,%     ,"# writes          ",  PRINT);
+    xi(SMF92IORB       ,8  ,%     ,"# bytes read      ",  PRINT);
+    xi(SMF92IORW       ,8  ,%     ,"# bytes written   ",  PRINT);
+    xi(SMF92IOWT       ,8  ,%     ,"# wait for IO     ",  PRINT);
+    xi(SMF92IOTT       ,8  ,%     ,"Avg IO wait time  ",  PRINT);
+    xi(SMF92IOUC       ,8  ,%     ,"User cache IO     ",  PRINT);
+    xi(SMF92IOUM       ,8  ,%nz   ,"User cache merged ",  PRINT);
+    xi(SMF92IOUCC      ,8  ,%nz   ,"User cache cancel ",  PRINT);
+    xi(SMF92IOMC       ,8  ,%     ,"Meta cache IO     ",  PRINT);
+    xi(SMF92IOMM       ,8  ,%nz   ,"Meta cache merged ",  PRINT);
+    xi(SMF92IOMCC      ,8  ,%nz   ,"Meta cache cancel ",  PRINT);
+    xi(SMF92IOLC       ,8  ,%     ,"Log  cache IO     ",  PRINT);
+    xi(SMF92IOLM       ,8  ,%nz   ,"Log  cache merged ",  PRINT);
+    xi(SMF92IOLCC      ,8  ,%nz   ,"Log  cache cancel ",  PRINT);
+    xi(SMF92IOCCT      ,2  ,%     ,"Number of records ",NOPRINT);
+    xi(SMF92IOCCL      ,2  ,%     ,"Length of records ",NOPRINT);
+    char * pCircum = p; //   next
+   fprintf(fHandle,"%9.9s %9.9s %9.9s %9.9s\n",
+       "    Count","WaitCount"," IOCancel"," IOMerged");
+   TRIPLET(CIRCUM     ,pCircum            ,
+          SMF92IOCCT, SMF92IOCCL,NOPRINT);
+      xi(SMF92ICCCT      ,8  ,%     ,"Count             ",NOPRINT);
+      xi(SMF92ICCWT      ,8  ,%     ,"Wait count        ",NOPRINT);
+      xi(SMF92ICCC       ,8  ,%     ,"IO cancelled      ",NOPRINT);
+      xi(SMF92ICCM       ,8  ,%     ,"IO Merged         ",NOPRINT);
+      xs(SMF92ICD        ,54 ,%     ,"Why               ",NOPRINT);
+   if ( SMF92ICCCT  > 0)
+   fprintf(fHandle,"%9.1llu %9.1lli %9.1lli %9.1lli %-54.54s\n",
+   SMF92ICCCT,
+   SMF92ICCWT,
+   SMF92ICCC,
+   SMF92ICCM,
+   SMF92ICD);
+   ETRIPLET(CURCUM   )
+   fprintf(fHandle," \n");
+ ETRIPLET(METACACHE)
+}

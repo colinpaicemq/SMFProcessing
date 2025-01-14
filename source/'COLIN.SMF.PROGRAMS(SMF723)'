@@ -1,0 +1,131 @@
+//MIT License
+//
+//Copyright (c) 2020 Stromness Software Solutions.
+//
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+//
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+//
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
+//
+//* Contributors:
+//*   Colin Paice - Initial Contribution
+
+FILE * SMF72_3  = 0;
+//
+// start processing here
+//
+void dosmf72_3( char  * pSMF,long count){
+  if  (SMF72_3  == 0 ) SMF72_3  = MYOPEN("dd:S723    ");
+  if  (SMF72_3  == (FILE *)   -1)return;
+  // the printf* routines use this global variable
+  fHandle = SMF72_3 ;
+  int offset;
+  printOffset = 0;
+  char * pSMFZ;
+  fprintf(fHandle,"====SMF72 -3 =============== record %u\n",count);
+  char * pOffsetBase;   // this is used to caluclate field offsets
+  pOffsetBase = pSMF;
+  pSMFZ = pSMF;
+  char * pJBN;
+  char * pSTEPNAME;
+  char * pPROGRAM;
+  char * system;
+  char * p = pSMF;  // this is incremented with each field
+  //
+  // start of fields
+  //
+  //  printHexS(pSMF,80);
+  xi(LEN         ,2 ,%    ,"Record length     ",NOPRINT);
+  xi(SEG         ,2 ,%    ,"Segment type      ",NOPRINT);
+  xx(FLG         ,1 ,%    ,"Record Flag       ",NOPRINT);
+  xx(rec_type    ,1 ,%    ,"Record type       ",NOPRINT);
+  xfn(TME        ,4 ,SMFTime ,"SMFTime        ",  PRINT);
+  xfn(date       ,4 ,SMFDate ,"SMFDate        ",  PRINT);
+  xs(SID         ,4 ,%    ,"SMF system id     ",  PRINT);
+  xs(ssid        ,4 ,%    ,"SMF subsystem_id  ",  PRINT);
+  xi(subtype     ,2 ,%    ,"SMFSubtype        ",  PRINT);
+  xi(TRN         ,2 ,%    ,"number of subtypes",  PRINT);
+  xx(reerver26   ,2 ,%    ,"Reserved          ",NOPRINT);
+  checkOffset(28);
+  xi(subsyso     ,4 ,%    ,"Subsys offset     ",NOPRINT);
+  xi(subsysl     ,2 ,%    ,"Subsys len        ",NOPRINT);
+  xi(subsysn     ,2 ,%    ,"Subsys number     ",NOPRINT);
+  checkOffset(36);
+  xi(wlm___o     ,4 ,%    ,"wlm    offset     ",NOPRINT);
+  xi(wlm___l     ,2 ,%    ,"wlm    len        ",NOPRINT);
+  xi(wlm___n     ,2 ,%    ,"wlm    number     ",NOPRINT);
+  checkOffset(44);
+  xi(scs___o     ,4 ,%    ,"sc     offset     ",NOPRINT);
+  xi(scs___l     ,2 ,%    ,"sc     len        ",NOPRINT);
+  xi(scs___n     ,2 ,%    ,"sc     number     ",NOPRINT);
+  xi(rg____o     ,4 ,%    ,"rg     offset     ",NOPRINT);
+  xi(rg____l     ,2 ,%    ,"rg     len        ",NOPRINT);
+  xi(rg____n     ,2 ,%    ,"rg     number     ",NOPRINT);
+  checkOffset(60);
+  xi(srcp__o     ,4 ,%    ,"srcp   offset     ",  PRINT);
+  xi(srcp__l     ,2 ,%    ,"srcp   len        ",  PRINT);
+  xi(srcp__n     ,2 ,%    ,"srcp   number     ",  PRINT);
+  TRIPLET(SCS    ,pSMFZ+ scs___o     ,
+        scs___n   , scs___l  ,NOPRINT);
+//   printHexS(p,40);
+     xs(SCSN             ,8  ,%     ,"Service Class     ",  PRINT);
+     xi(SCSHash          ,4  ,%nb   ,"count             ",  PRINT);
+ ETRIPLET(SCS      );
+  TRIPLET(RG     ,pSMFZ+ rg____o     ,
+        rg____n   , rg____l  ,NOPRINT);
+//   printHexS(p,40);
+     xs(GGNM             ,8  ,%     ,"Resource group nm ",  PRINT);
+     xs(GGDE             ,32 ,%     ,"Description       ",  PRINT);
+ ETRIPLET(RG       );
+  TRIPLET(SRCP   ,pSMFZ+ srcp__o     ,
+        srcp__n   , srcp__l  ,NOPRINT);
+//   printHexS(p,40);
+     xx(CRTX             ,2  ,%     ,"Index             ",  PRINT);
+     xx(CWMX             ,2  ,%     ,"Index 2           ",  PRINT);
+     xx(CWMN             ,2  ,%     ,"entries           ",  PRINT);
+     xx(CRS1             ,1  ,%     ,"repoting          ",  PRINT);
+     xx(CADF             ,1  ,%     ,"Data flag         ",  PRINT);
+     xi(CPER             ,1  ,%     ,"Period  number    ",  PRINT);
+     xi(CRTF             ,1  ,%     ,"time type        ",  PRINT);
+     xi(CRGF             ,1  ,%     ,"goal flags        ",  PRINT);
+     xx(Reserved11       ,1  ,%     ,"goal flags        ",NOPRINT);
+     xi(CVAL             ,4  ,%     ,"response time     ",  PRINT);
+     xi(CPCT             ,2  ,%     ,"Goal percentage   ",  PRINT);
+     xi(CIMP             ,2  ,%     ,"Importance        ",  PRINT);
+     xi(CDUR             ,4  ,%     ,"Period dur        ",  PRINT);
+     xf(CSRV             ,8  ,%     ,"Tot service units ",  PRINT);
+     xf(CCPU             ,8  ,%     ,"Tot CPU SU        ",  PRINT);
+     xf(CIOC             ,8  ,%     ,"Tot IOX SU        ",  PRINT);
+     xf(CMSO             ,8  ,%     ,"Tot Storage       ",  PRINT);
+     xf(CSRB             ,8  ,%     ,"Tot SRB CP + ZIIP ",  PRINT);
+     xf(CPIR             ,8  ,%     ,"Page in count     ",  PRINT);
+     xf(CHPI             ,8  ,%     ,"Hiperspace pg in  ",  PRINT);
+     xx(Reserver80       ,104,%     ,"boring            ",NOPRINT);
+     checkOffset(184);
+     xi(CRCP             ,4  ,%     ,"Transaction compl",  PRINT);
+     xi(CARC             ,4  ,%     ,"Transaction abend",  PRINT);
+     xi(CNCP             ,4  ,%     ,"CNCP             ",  PRINT);
+     xi(CANC             ,4  ,%     ,"CANP             ",  PRINT);
+     xf(CTET             ,8  ,%     ,"CTET             ",  PRINT);
+     xf(CXET             ,8  ,%     ,"CXET             ",  PRINT);
+     xf(CEST             ,8  ,%     ,"CETS             ",  PRINT);
+     checkOffset(224);
+     xi(CCUS             ,4  ,%     ,"CPU Using        ",  PRINT);
+     xi(CTOT             ,4  ,%     ,"Delayed samples  ",  PRINT);
+     xi(CCDE             ,4  ,%     ,"CPU delay        ",  PRINT);
+     xi(CCCA             ,4  ,%     ,"CPU Capping      ",  PRINT);
+ ETRIPLET(SRCP     );
+}

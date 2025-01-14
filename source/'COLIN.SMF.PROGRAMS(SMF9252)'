@@ -1,0 +1,242 @@
+//MIT License
+//
+//Copyright (c) 2020 Stromness Software Solutions.
+//
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+//
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+//
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
+//
+//* Contributors:
+//*   Colin Paice - Initial Contribution
+
+//  ZFS file closed - stats
+
+//
+// #include <U925.h> //  the functions for common printing of vtocs
+// #include <U9211.h> //  the functions for common printing of vtocs
+FILE * SMF92_52  =0;  // for reserved
+FILE * SMF92_52VM=0;  // for reserved
+//
+// start processing here
+//
+// d * RootS9211   =  NULL;
+void zz(char * s, unsigned long long int v){
+ fprintf(SMF92_52VM,"%-13.13s %8.1lli ",s,v);
+}
+void zf(char * s, float                  v){
+ fprintf(SMF92_52VM,"%-13.13s %6.3f ",s,v);
+}
+void nl(char * s){
+ fprintf(SMF92_52VM,"%s\n",s);
+}
+void dosmf92_52( char  * pSMF,long count){
+// #include <U925i.h> //  the functions for common printing of vtocs
+  if  (SMF92_52 == 0 ) SMF92_52 = MYOPEN("dd:S9252   ");
+  if  (SMF92_52 == (FILE *)   -1)return;
+  if  (SMF92_52VM == 0 ) SMF92_52VM = MYOPEN("dd:S9252VM ");
+  // the printf* routines use this global variable
+  fHandle = SMF92_52;
+  doneIDTHeader = 0;
+  int offset;
+  printOffset = 0;
+  char * pSMFZ;
+  char * pOffsetBase;   // this is used to caluclate field offsets
+  pOffsetBase = pSMF;
+  pSMFZ = pSMF;
+  char * system;
+  float fDuration;
+  char startDT[27];
+  char endDT[27];
+  char * p = pSMF;  // this is incremented with each field
+  fprintf(fHandle,"statistics for the zFS user file cache\n");
+  //
+  // start of fields
+  //
+  xi(LEN         ,2 ,%    ,"Record length     ",NOPRINT);
+  xi(SEG         ,2 ,%    ,"Segment type      ",NOPRINT);
+  xx(FLG         ,1 ,%    ,"Record Flag       ",NOPRINT);
+  xx(REC_TYPE    ,1 ,%    ,"Record type       ",NOPRINT);
+  xfn(TME        ,4 ,SMFTime ,"SMFTime        ",  PRINT);
+  xfn(DTE        ,4 ,SMFDate ,"SMFDate        ",NOPRINT);
+  xs(SID         ,4 ,%    ,"SMF system id     ",NOPRINT);
+  xs(SSID        ,4 ,%    ,"SMF subsystem_id  ",NOPRINT);
+  xi(SUBTYPE     ,2 ,%    ,"SMFSubtype        ",NOPRINT);
+  xx(RESERVER24  ,2 ,%    ,"Reserved          ",NOPRINT);
+  xi(SMF92SDL    ,2 ,%    ,"Length Self def   ",NOPRINT);
+  xi(SMF92SOF    ,4 ,%    ,"offset to subsys  ",NOPRINT);
+  xi(SMF92SLN    ,2 ,%    ,"Length    susbsy  ",NOPRINT);
+  xi(SMF92SON    ,2 ,%    ,"Number    subsys  ",NOPRINT);
+  xi(SMF92IOF    ,4 ,%    ,"offset to id      ",NOPRINT);
+  xi(SMF92ILN    ,2 ,%    ,"Length    id      ",NOPRINT);
+  xi(SMF92ION    ,2 ,%    ,"Number    id      ",NOPRINT);
+  xi(SMF92DOF    ,4 ,%    ,"offset to data    ",NOPRINT);
+  xi(SMF92DLN    ,2 ,%    ,"Length    Data    ",NOPRINT);
+  xi(SMF92DON    ,2 ,%    ,"Number    data    ",NOPRINT);
+ char JobName[9];
+ TRIPLET(ID         ,pSMFZ+ SMF92IOF    ,
+        SMF92ION  ,SMF92ILN ,NOPRINT);
+    xs(SMF92JBN    ,8,%,"JobName          ",  PRINT);
+    memcpy(&JobName[0],&SMF92JBN[0],8);
+    JobName[8] = 0; // null terminator
+ ETRIPLET(ID);
+ char * pCache;
+ int lCache;
+ int nCache;
+ TRIPLET(SMF9252    ,pSMFZ+ SMF92DOF    ,
+        SMF92DON  , SMF92DLN ,NOPRINT);
+    xSTCKEDT(SMF92UCT   ,16,%,"Recorded time    ",  PRINT);
+    xi(SMF92UCSCH      ,8  ,%     ,"Count dirty write ",  PRINT);
+    xi(SMF92UCSET      ,8  ,%     ,"Change attr       ",  PRINT);
+    xi(SMF92UCFSY      ,8  ,%     ,"Sync dirty        ",  PRINT);
+    xi(SMF92UCFNM      ,8  ,%     ,"Purge u cache     ",  PRINT);
+    xi(SMF92UCRD       ,8  ,%     ,"Read from cache   ",  PRINT);
+    xi(SMF92UCRDA      ,8  ,%     ,"Read Ahead        ",  PRINT);
+    xi(SMF92UCWR       ,8  ,%     ,"Write user cache  ",  PRINT);
+    xi(SMF92UCGET      ,8  ,%     ,"Get ATTR          ",  PRINT);
+    xi(SMF92UCFL       ,8  ,%     ,"Flush data        ",  PRINT);
+    xi(SMF92UCDEL      ,8  ,%     ,"Write Avoided     ",  PRINT);
+    xi(SMF92UCRDF      ,8  ,%     ,"Read cache miss   ",  PRINT);
+    xi(SMF92UCWRF      ,8  ,%     ,"Write cache miss  ",  PRINT);
+    xi(SMF92UCRIO      ,8  ,%     ,"IO for user cache ",  PRINT);
+    xi(SMF92UCWRS      ,8  ,%     ,"Normal write      ",  PRINT);
+    xi(SMF92UCWRE      ,8  ,%     ,"Error write       ",  PRINT);
+    xi(SMF92UCWRR      ,8  ,%     ,"IOs due to cacmis ",  PRINT);
+    xi(SMF92UCRWR      ,8  ,%     ,"Read wait for IO  ",  PRINT);
+
+    xi(SMF92UCWW       ,8  ,%     ,"Write wait for IO ",  PRINT);
+    xi(SMF92UCWWF      ,8  ,%     ,"Write wait fsync  ",  PRINT);
+    xi(SMF92UCWWE      ,8  ,%     ,"Write wait error  ",  PRINT);
+    xi(SMF92UCWWR      ,8  ,%     ,"Write wait steal  ",  PRINT);
+
+    checkOffset(184);
+    xi(SMF92UCRST      ,8  ,%     ,"reclaim started   ",  PRINT);
+    xi(SMF92UCCS       ,4  ,%     ,"#Cache spaces     ",  PRINT);
+    xi(SMF92UCPCS      ,4  ,%     ,"#Pages in space   ",  PRINT);
+    xi(SMF92UCSS       ,4  ,%     ,"Size file seg     ",  PRINT);
+    xi(SMF92UCGS       ,4  ,%     ,"Size page         ",  PRINT);
+    checkOffset(208);
+    xi(SMF92UCPGT      ,4  ,%     ,"tot pages in cache",  PRINT);
+    xi(SMF92UCPGF      ,4  ,%     ,"Free pages        ",  PRINT);
+    xi(SMF92UCSGC      ,4  ,%     ,"Alloc seg         ",  PRINT);
+    checkOffset(220);
+    xi(SMF92UCDSL      ,4  ,%     ,"len cache space rc",  PRINT);
+    pCache = p;
+    lCache =  SMF92UCDSL ;
+    nCache =  SMF92UCCS ;
+    fprintf(fHandle,"%8.1lli %8.1lli %8.1lli %8.1lli %8.1lli %8.1lli"
+                    "%8.1lli %8.1lli %8.1lli %8.1lli %8.1lli %8.1lli"
+                    "%8.1lli %8.1lli %8.1lli %8.1lli %8.1lli\n",
+                    SMF92UCSCH,
+                    SMF92UCSET,
+                    SMF92UCFSY,
+                    SMF92UCFNM,
+                    SMF92UCRD ,
+                    SMF92UCRDA,
+                    SMF92UCWR ,
+                    SMF92UCGET,
+                    SMF92UCFL ,
+                    SMF92UCDEL,
+                    SMF92UCRDF,
+                    SMF92UCWRF,
+                    SMF92UCRIO,
+                    SMF92UCWRS,
+                    SMF92UCWRE,
+                    SMF92UCWRR,
+                    SMF92UCRWR);
+ //////////////////////////////////////////////
+ fprintf(SMF92_52VM,"External requests\n");
+ zz( "Reads     ",  SMF92UCRD ); // UCRD
+ zz("Fsyncs    ",  SMF92UCFSY);  // FSYBC
+ zz("Schedules ",  SMF92UCSCH);
+ nl(" ");
+ zz("Write     ",  SMF92UCWR ); //UCWR
+ zz("SetAttrs  ",  SMF92UCSET); // UCSET
+ zz("Ummaps    ",  SMF92UCFNM);
+ nl(" ");
+
+ zz("Asyn reads",  SMF92UCRDA);
+ zz("Get Attrs ",  SMF92UCGET);
+ zz("Flushes   ",  SMF92UCFL );
+ nl(" ");
+ nl(" ");
+ /////////////////////////////////////////////////////
+ nl("File system reads");
+
+ zz( "Reads faults",  SMF92UCRDF);
+ long  f;
+ if ( SMF92UCRD > 0)
+      f = 100.0 *(float)SMF92UCRDF /(float) SMF92UCRD;
+ else f = 0;
+ zf( "Fault ratio ",  f     )    ;
+ nl(" ");
+
+ zz( "Write faults",   SMF92UCWRF);
+ if ( SMF92UCWR > 0)
+   f = 100.0 *(float)SMF92UCWRF /(float) SMF92UCWR;
+ else f = 0;
+ zf( "Fault ratio ",  f     )    ;
+ nl(" ");
+
+ zz( "Read waits",  SMF92UCRWR);
+ if ( SMF92UCRD > 0)
+   f = 100.0 *(float)SMF92UCRWR /(float) SMF92UCRD;
+ else f = 0;
+ zf( "Wait ratio",  f         );
+ nl(" ");
+
+ /////////////////////////////////////////////////////
+ nl(" ");
+ nl(" ");
+ nl("File system writes");
+
+ zz( "Sched writes",  SMF92UCWRS);
+ zz( "Sync wait ",  SMF92UCFSY);
+ nl(" ");
+ zz( "Error writes",  SMF92UCWRE);
+ zz( "Error wait  ",  SMF92UCWWE);
+ nl(" ");  // end of line
+ zz( "Scheduled deletes",0);
+ nl(" ");  // end of line
+ zz("Page Reclaim Writes",SMF92UCWRR);
+ zz("Page Reclaim Wait  ",SMF92UCWWR);
+ nl(" ");  // end of line
+ zz("Write Waits ??", 0);
+
+ nl(" ");  // end of line
+ nl(" "); // empty line
+ nl("Page Management");
+ zz("Total Pages", SMF92UCPGT    );
+ zz("Free Pages ", SMF92UCPGF   );
+ nl(" ");
+ zz("Segments      ", SMF92UCSGC    );
+ nl(" ");
+ zz("Steal Invocations",SMF92UCRST    );
+ nl(" ");
+ nl(" ");
+ ETRIPLET(SMF9252);
+ #ifdef boring
+ TRIPLET(CALLS      ,pCache             ,
+    nCache          ,lCache     ,NOPRINT);
+   xs(SMF92DSNAM  ,8 ,%    ,"Cache name        ",NOPRINT);
+   xi(SMF92DSAS   ,4 ,%    ,"# Segments        ",NOPRINT);
+   xi(SMF92DSFR   ,4 ,%    ,"# free pages      ",NOPRINT);
+   fprintf(fHandle,"%8.8s #Seg %8.1i #freePages %8.1i\n",
+                    SMF92DSNAM,SMF92DSAS,SMF92DSFR);
+  ETRIPLET(CALLS    );
+#endif
+
+}

@@ -1,0 +1,249 @@
+//MIT License
+//
+//Copyright (c) 2020 Stromness Software Solutions.
+//
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+//
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+//
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
+//
+//* Contributors:
+//*   Colin Paice - Initial Contribution
+
+#pragma csect(code,  "SMFFORM")
+#pragma csect(static,"SMFFORM$S")
+// the width of the description at the start of the output line
+#define wDesc 20
+#include <ctype.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#define SMF_REC_MAX_SIZE 32756
+#include <search.h>
+#include <macros.h>
+#include <time.h>
+
+FILE * fHandle= 0;
+/********************************************************************/
+/* True and false.                                                  */
+/********************************************************************/
+#define TRUE            1
+#define FALSE           0
+#define PRINT  1
+#define NOPRINT  0
+#define DEF !!!
+typedef unsigned char   int1;
+typedef unsigned short  int2;
+typedef unsigned int    int4;
+typedef unsigned long long    int8;
+typedef unsigned long long    ull;
+typedef unsigned long long     ll8;
+typedef float          float4;
+typedef double         float8;
+typedef long double    float16;
+int size;
+#include <printfs.h>
+#define PRINT_EBCDIC_STRING(fieldName, value) {      \
+    size = getEbcdicStringSize(value, sizeof(value));   \
+    printf("%s%.*s\n", fieldName, size, value);      \
+}
+char dateTime[30];
+/*******************************************************************/
+/* Start the program                                               */
+/*******************************************************************/
+#include <readArgs.h>
+#include <MYOPEN.h>
+#include <HTTPCODE.h>
+#include <printhx.h>
+#include <tree.h>
+#include <tree9211.h>
+#include <flags.h>
+int printOffset=0;
+#include <smf119.h>
+ #include <smf12301.h>
+#include <smfsub.h>
+#include <prcache.h>
+// #include <smf1209.h>
+#include <smf12011.h>
+// #include <smf120_9>
+#include <smf306.h>
+#include <smf426.h>
+#include <smf425.h>
+#include <smf4227.h>
+#include <smf421.h>
+#include <smf422.h>
+#include <smf723.h>
+#include <smf891.h>
+#include <smf9211.h>
+#include <smf9214.h>
+#include <smf9251.h>
+#include <smf9252.h>
+#include <smf9253.h>
+#include <smf9255.h>
+#include <smf9259.h>
+#ifdef no
+#include <smf14.h >
+#endif
+int  main(int argc, char *argv[])
+{
+   char *      pSMF = 0;
+   char *      pRAW = 0; // this is the record including len and seg
+                         // at the front
+   short  * short2;
+   long count = 0;
+   long inum;              /* Number of bytes read from input     */
+   __amrc_type save_amrc;  /* File return code information        */
+   FILE * SMFIN;           /* SMF Input file                      */
+
+    readArgs( argc, argv  );
+    /****************************************************************/
+    /* Open the input file called SMFIN                             */
+    /* If the handle is null then put out an error message and quit */
+    /****************************************************************/
+    if ((SMFIN = fopen("dd:SMFIN", "rb, type=record")) == NULL)
+    {
+        save_amrc = *__amrc;
+        printf(" Error opening SMFIN ");
+        printf(" %s \n", strerror(errno));   /* text of the errno   */
+        printf(" fopen errno=%d lastop=%d syscode=%X rc=%d\n", errno,
+                 save_amrc.__last_op,
+                 save_amrc.__code.__abend.__syscode,
+                 save_amrc.__code.__abend.__rc);
+        return 8 ;
+    }
+    /****************************************************************/
+    /* Allocate memory to store an SMF record                       */
+    /****************************************************************/
+    pSMF = (char *        )__malloc31(SMF_REC_MAX_SIZE);
+    if (pSMF == NULL) {
+        printf(" Failed to allocate memory \n");
+        return 8;
+    }
+    pRAW = pSMF - 4;   // point back past the Record len + segment
+    char recordType;
+    /****************************************************************/
+    /* Loop through records until there is no more data to process  */
+    /****************************************************************/
+    for (count = 1;              ; count++)
+    {
+        inum = fread(pSMF,
+                     sizeof(char),
+                     SMF_REC_MAX_SIZE,
+                     SMFIN);
+
+        if (inum == 0) break;
+        // pSMF is 4 bytes into the SMF structure so need
+        // to bias the pointer
+        recordType  = * (pSMF-4 +5 );
+        short subType = * (short * ) (pSMF-4 + 22);
+        long smf123V1version = * (long *) (pSMF -4 +24);
+      if (recordType  ==  123 && subType == 1)
+         doSMF123_1_1(pRAW,count               );
+      else
+      if (recordType  ==   120  && (subType == 11) )
+          dosmf120_11(pRAW,count);
+      else
+      if (recordType  ==   30   && (subType == 1 ) )
+          dosmf30_6(pRAW,count);
+      else
+      if (recordType  ==   30   && (subType == 2 ) )
+          dosmf30_6(pRAW,count);
+      if (recordType  ==   30   && (subType == 3 ) )
+          dosmf30_6(pRAW,count);
+      else
+      if (recordType  ==   30   && (subType == 4 ) )
+          dosmf30_6(pRAW,count);
+      else
+      if (recordType  ==   30   && (subType == 5 ) )
+          dosmf30_6(pRAW,count);
+   if (recordType  ==   42  )
+   {
+      if (subType == 6   )
+          dosmf42_6(pRAW,count);
+      else if (subType == 1   )
+          dosmf42_1(pRAW,count);
+      else if (subType == 2   )
+          dosmf42_2(pRAW,count);
+      else if (subType == 5   )
+          dosmf42_5(pRAW,count);
+      else if (subType == 27  )
+          dosmf42_27(pRAW,count);
+      else printf("++Record type  %hhu - %hd not processed \n",
+       recordType,subType);
+   }
+   if (recordType  ==   72  )
+   {
+      if (subType == 3   )
+          dosmf72_3(pRAW,count);
+      else printf("++Record type  %hhu - %hd not processed \n",
+       recordType,subType);
+   }
+      else if (recordType  ==   89   && (subType == 1 ) )
+          dosmf89_1(pRAW,count);
+      else if (recordType  ==   92)
+      {
+        if (subType == 10  )   // file open
+                                ;
+        else if (subType == 11  ) // file closed
+           dosmf92_11(pRAW,count);
+        else if (subType == 16  ) // socket/file closed
+                                ;
+        else if (subType == 17  ) // file accesses
+                                ;
+        else if (subType == 14  )
+           dosmf92_14(pRAW,count);
+        else if (subType == 51  )
+           dosmf92_51(pRAW,count);
+        else if (subType == 52  )
+           dosmf92_52(pRAW,count);
+        else if (subType == 53  )
+           doSMF92_53(pRAW,count);
+        else if (subType == 55  )
+           doSMF92_55(pRAW,count);
+        else if (subType == 59  )
+           doSMF92_59(pRAW,count);
+        else printf("++Record type  %hhu - %hd not processed \n",
+       recordType,subType);
+      }
+      else if (recordType  == 119 )
+      {
+        if (subType == 2   ) // file closed
+           dosmf119_2(pRAW,count);
+        else printf("++Record type  %hhu - %hd not processed \n",
+       recordType,subType);
+      }
+#ifdef no
+      else if (recordType  ==   14                      )
+          dosmf14_1(pRAW,count,inum);
+      else if (recordType  ==   15                      )
+          dosmf14_1(pRAW,count,inum);
+#endif
+      else printf("++Record type  %hhu - %hd not processed \n",
+       recordType,subType);
+    }
+    fclose(SMFIN);
+#ifdef no
+    printTree("dd:S123SUM",serverRoot,"system   Userid  resp key\n");
+    printTree("dd:S123IP ",IPRoot    ,"IP       Userid  resp key\n");
+    printTree("dd:S120SUM",S120Root   ,"HH:MM Userid  URI     \n");
+    printTree("dd:S120TOT",S120TotCPU   ,"URI     \n");
+    printTree("dd:S120TOT2", RootS123URI, "URI     \n");
+    printTree9211("dd:S9211TOT", RootS9211, " >>>    \n");
+#endif
+    return 0;
+}

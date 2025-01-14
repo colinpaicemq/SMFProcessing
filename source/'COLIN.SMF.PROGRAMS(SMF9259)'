@@ -1,0 +1,112 @@
+//MIT License
+//
+//Copyright (c) 2020 Stromness Software Solutions.
+//
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+//
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+//
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
+//
+//* Contributors:
+//*   Colin Paice - Initial Contribution
+
+//  ZFS file system   stats
+
+//
+// #include <U925.h> //  the functions for common printing of vtocs
+// #include <U9211.h> //  the functions for common printing of vtocs
+   #include <U9259.h> //  the functions for common printing of vtocs
+FILE * SMF92_59  =0;  // for reserved
+//
+// start processing here
+//
+// d * RootS9211   =  NULL;
+void doSMF92_59( char  * pSMF,long count){
+// #include <U925i.h> //  the functions for common printing of vtocs
+  if  (SMF92_59 == 0 ) SMF92_59 = MYOPEN("dd:S9259   ");
+  if  (SMF92_59 == (FILE *)   -1)return;
+  // the printf* routines use this global variable
+  fHandle = SMF92_59;
+  doneIDTHeader = 0;
+  int offset;
+  printOffset = 0;
+  char * pSMFZ;
+  char * pOffsetBase;   // this is used to caluclate field offsets
+  pOffsetBase = pSMF;
+  pSMFZ = pSMF;
+  char * system;
+  float fDuration;
+  char startDT[27];
+  char endDT[27];
+  char * p = pSMF;  // this is incremented with each field
+  fprintf(fHandle,"per File System usage\n");
+  //
+  // start of fields
+  //
+  xi(LEN         ,2 ,%    ,"Record length     ",NOPRINT);
+  xi(SEG         ,2 ,%    ,"Segment type      ",NOPRINT);
+  xx(FLG         ,1 ,%    ,"Record Flag       ",NOPRINT);
+  xx(REC_TYPE    ,1 ,%    ,"Record type       ",NOPRINT);
+  xfn(TME        ,4 ,SMFTime ,"SMFTime        ",NOPRINT);
+  xfn(DTE        ,4 ,SMFDate ,"SMFDate        ",NOPRINT);
+  xs(SID         ,4 ,%    ,"SMF system id     ",NOPRINT);
+  xs(SSID        ,4 ,%    ,"SMF subsystem_id  ",NOPRINT);
+  xi(SUBTYPE     ,2 ,%    ,"SMFSubtype        ",NOPRINT);
+  xx(RESERVER24  ,2 ,%    ,"Reserved          ",NOPRINT);
+  xi(SMF92SDL    ,2 ,%    ,"Length Self def   ",NOPRINT);
+  xi(SMF92SOF    ,4 ,%    ,"offset to subsys  ",NOPRINT);
+  xi(SMF92SLN    ,2 ,%    ,"Length    susbsy  ",NOPRINT);
+  xi(SMF92SON    ,2 ,%    ,"Number    subsys  ",NOPRINT);
+  xi(SMF92IOF    ,4 ,%    ,"offset to id      ",NOPRINT);
+  xi(SMF92ILN    ,2 ,%    ,"Length    id      ",NOPRINT);
+  xi(SMF92ION    ,2 ,%    ,"Number    id      ",NOPRINT);
+  xi(SMF92DOF    ,4 ,%    ,"offset to data    ",NOPRINT);
+  xi(SMF92DLN    ,2 ,%    ,"Length    Data    ",NOPRINT);
+  xi(SMF92DON    ,2 ,%    ,"Number    data    ",NOPRINT);
+ TRIPLET(FILESYSTEM ,pSMFZ+ SMF92DOF    ,
+        SMF92DON-1, SMF92DLN ,NOPRINT);
+    xSTCKEDT(SMF92FST   ,16,%,"Previous time    ",  PRINT);
+    xi(SMF92FSVN       ,8  ,%nz   ,"# Vnodes          ",  PRINT);
+    xi(SMF92FSVU       ,8  ,%nz   ,"# Vnodes for Unix ",  PRINT);
+    xi(SMF92FSOP       ,8  ,%nz   ,"# open files      ",  PRINT);
+    xi(SMF92FSUS       ,8  ,%nz   ,"# pages in user c ",  PRINT);
+    xi(SMF92FSMT       ,8  ,%nz   ,"# pages in meta c ",  PRINT);
+    xi(SMF92FSAR       ,8  ,%nz   ,"# app read        ",  PRINT);
+    xi(SMF92FSRR       ,8  ,%nz   ,"# avg read rt     ",  PRINT);
+    xi(SMF92FSAW       ,8  ,%nz   ,"# avg write       ",  PRINT);
+    xi(SMF92FSWR       ,8  ,%nz   ,"# avg write rt    ",  PRINT);
+    xi(SMF92FSXR       ,8  ,%nz   ,"# reads sent      ",  PRINT);
+    xi(SMF92FSXW       ,8  ,%nz   ,"# write sent      ",  PRINT);
+    xi(SMF92FSXRR      ,8  ,%nz   ,"# av read sent rr ",  PRINT);
+    xi(SMF92FSXWR      ,8  ,%nz   ,"# av write sent rr",  PRINT);
+    xi(SMF92FSES       ,8  ,%nz   ,"# out of space    ",  PRINT);
+    xi(SMF92FSIO       ,8  ,%nz   ,"# disk errors     ",  PRINT);
+    xi(SMF92FSCM       ,8  ,%nz   ,"# XCF errors      ",  PRINT);
+    xi(SMF92FSCA       ,8  ,%nz   ,"# user abended    ",  PRINT);
+    xSTCKEDT(SMF92FMN  ,16 ,%nz   ,"Mount time of day ",  PRINT);
+    xs(SMF92FDD        ,8  ,%nz   ,"DD Name           ",  PRINT);
+    xi(SMF92FSTK       ,8  ,%nz   ,"# sysplex tokens  ",  PRINT);
+    xi(SMF92FSDR       ,8  ,%nz   ,"# Read ios        ",  PRINT);
+    xi(SMF92FSDRB      ,8  ,%nz   ,"# Read ios bytes  ",  PRINT);
+    xi(SMF92FSDW       ,8  ,%nz   ,"# write ios       ",  PRINT);
+    xi(SMF92FSDWB      ,8  ,%nz   ,"# write ios bytes ",  PRINT);
+    xi(SMF92FSDWC      ,8  ,%nz   ,"# wait for IO     ",  PRINT);
+    xi(SMF92FSDWT      ,8  ,%nz   ,"# Avg wait time   ",  PRINT);
+    xs(SMF92FSNM       ,45 ,%     ,"File Name         ",  PRINT);
+    fprintf(fHandle,"\n"); // blank line
+    U92_59
+ ETRIPLET(FILESYSTEM)
+}
